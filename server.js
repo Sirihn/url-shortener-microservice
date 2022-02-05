@@ -11,7 +11,8 @@ const res = require('express/lib/response');
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
-mongoose.connect(process.env.DB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb+srv://admin:i5963uNLWf4ARyCx@cluster0.qt182.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
+   { useNewUrlParser: true, useUnifiedTopology: true });
 app.use(bodyParser.urlencoded({ extended: "false" }));
 
 const shortURLSchema = new mongoose.Schema( 
