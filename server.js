@@ -11,8 +11,7 @@ const res = require('express/lib/response');
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
-mongoose.connect('mongodb+srv://admin:i5963uNLWf4ARyCx@cluster0.qt182.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
-   { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(process.env.DB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 app.use(bodyParser.urlencoded({ extended: "false" }));
 
 const shortURLSchema = new mongoose.Schema( 
@@ -55,6 +54,18 @@ function generateShort(){
   return short;
 }
 
+function isValidHttpUrl(string) {
+  let url;
+  
+  try {
+    url = new URL(string);
+  } catch (_) {
+    return false;  
+  }
+
+  return url.protocol === "http:" || url.protocol === "https:";
+}
+
 // Your first API endpoint
 app.get('/api/hello', function(req, res) {
   res.json({ greeting: 'hello API' });
@@ -64,10 +75,15 @@ app.post("/api/shorturl", async function(req, res){
   //check if url is valid
   try{
     const longURL = (new URL(req.body.url)).hostname;
+    if(!isValidHttpUrl(req.body.url)){
+      res.json({ error: 'invalid url' });
+      return;
+    }
+    
     //check if url already exists in db
-    //console.log("checking is url is unique...");
+    console.log("checking is url is unique...");
     let uniqueLong = await isUniqueLong(req.body.url);
-    //console.log(uniqueLong);
+    console.log(uniqueLong);
     if(uniqueLong){
       res.json({
         "original_url" : uniqueLong.url,
@@ -75,15 +91,15 @@ app.post("/api/shorturl", async function(req, res){
       });
       return;
     }
-    //console.log("url is unique!");
+    console.log("url is unique!");
 
-    //console.log("creating short...")
+    console.log("creating short...")
     // create short for url
     let short = await generateShort();
     while(!isUniqueShort(short)){
       short = await generateShort();
     }
-    //console.log("short generated: "+ short);
+    console.log("short generated: "+ short);
     //create + save object in db
     const shortUrl = new ShortURL(
       { 
